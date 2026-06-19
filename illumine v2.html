@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ILLUMINE — learn the Word</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14112a;--ink-2:#1d193a;--ink-3:#272150;
+    --vellum:#f3e9d2;--vellum-dim:#b3a585;
+    --gold:#e3b341;--gold-hi:#f7dd86;--gold-deep:#9d7220;
+    --lapis:#4b6be0;--lapis-deep:#2c3f9e;--vermilion:#df4f33;--green:#3fb284;
+    --line:rgba(227,179,65,.18);--line-soft:rgba(227,179,65,.10);
+    --shadow:0 24px 60px -24px rgba(0,0,0,.7);
+    --serif:'Fraunces',Georgia,serif;--sans:'Space Grotesk',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--ink);color:var(--vellum);font-family:var(--sans);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(1100px 700px at 78% -8%,rgba(75,107,224,.16),transparent 60%),radial-gradient(900px 620px at 8% 8%,rgba(227,179,65,.10),transparent 55%),radial-gradient(1200px 900px at 50% 120%,rgba(223,79,51,.07),transparent 60%)}
+  body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 22px}
+  ::selection{background:var(--gold);color:var(--ink)}
+  a{color:inherit}
+  button{font-family:var(--sans);cursor:pointer}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:4px}
+  .eyebrow{font-family:var(--sans);font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .gold-text{background:linear-gradient(176deg,var(--gold-hi) 8%,var(--gold) 46%,var(--gold-deep) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  header{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);background:linear-gradient(to bottom,rgba(20,17,42,.92),rgba(20,17,42,.66));border-bottom:1px solid var(--line-soft)}
+  .bar{display:flex;align-items:center;gap:14px;padding:12px 0}
+  .mark{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-weight:900;font-size:1.18rem;letter-spacing:.04em}
+  .mark .glyph{width:26px;height:26px;flex:none}
+  .rank{margin-left:auto;display:flex;align-items:center;gap:12px;min-width:0}
+  .rank-meta{text-align:right;line-height:1.15}
+  .rank-name{font-size:.82rem;font-weight:600;color:var(--vellum)}
+  .rank-sub{font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:var(--vellum-dim)}
+  .xpbar{width:120px;height:8px;border-radius:20px;background:var(--ink-3);border:1px solid var(--line);overflow:hidden;flex:none}
+  .xpbar i{display:block;height:100%;width:0%;border-radius:20px;background:linear-gradient(90deg,var(--gold),var(--gold-hi));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  /* auth */
+  .auth{display:flex;align-items:center;flex:none}
+  .auth-btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.8rem;padding:8px 13px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--vellum);transition:.2s}
+  .auth-btn:hover{background:rgba(255,255,255,.07);border-color:var(--gold)}
+  .auth-user{display:flex;align-items:center;gap:9px}
+  .auth-user img{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);object-fit:cover}
+  .auth-user .who{line-height:1.12}
+  .auth-user .who b{display:block;font-size:.8rem;font-weight:600;color:var(--vellum)}
+  .auth-user .who span{font-size:.62rem;color:var(--vellum-dim);cursor:pointer;letter-spacing:.04em}
+  .auth-user .who span:hover{color:var(--gold)}
+  @media(max-width:620px){.rank{display:none}}
+  @media(max-width:560px){.auth-user .who b{display:none}.mark span.full{display:none}}
+
+  .hero{position:relative;padding:74px 0 64px;text-align:center}
+  .hero-eyebrow{margin-bottom:30px}
+  .initial{position:relative;display:inline-block;margin-bottom:6px;font-family:var(--serif);font-weight:900;font-size:clamp(6rem,22vw,13rem);line-height:.82;letter-spacing:.02em;background:linear-gradient(168deg,var(--gold-hi) 4%,var(--gold) 40%,var(--gold-deep) 92%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 24px rgba(227,179,65,.28))}
+  .initial::after{content:"\03B1\03A9";position:absolute;inset:0;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.85) 50%,transparent 62%);-webkit-background-clip:text;background-clip:text;color:transparent;transform:translateX(-120%);animation:sweep 4.6s ease-in-out infinite}
+  @keyframes sweep{0%,62%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
+  .filigree{position:absolute;top:8%;width:96px;opacity:.5;color:var(--gold);pointer-events:none}
+  .filigree.l{left:-6px;transform:scaleX(-1)}
+  .filigree.r{right:-6px}
+  @media(max-width:760px){.filigree{display:none}}
+  .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,5.8vw,3.7rem);line-height:1.04;letter-spacing:-.015em;margin:14px auto 0;max-width:16ch}
+  .hero h1 em{font-style:italic}
+  .hero p.lead{margin:22px auto 0;max-width:50ch;color:#d8cbac;font-size:1.06rem}
+  .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+  .btn{font-family:var(--sans);font-weight:600;font-size:.92rem;letter-spacing:.01em;padding:13px 24px;border-radius:12px;border:1px solid transparent;display:inline-flex;align-items:center;gap:9px;transition:transform .18s,box-shadow .25s,background .2s;text-decoration:none}
+  .btn-gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#3a2a06;box-shadow:0 12px 30px -10px rgba(227,179,65,.55)}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 16px 38px -10px rgba(227,179,65,.7)}
+  .btn-ghost{background:rgba(255,255,255,.03);color:var(--vellum);border-color:var(--line)}
+  .btn-ghost:hover{background:rgba(255,255,255,.07);transform:translateY(-2px)}
+  .stats{display:flex;gap:0;justify-content:center;margin-top:54px;flex-wrap:wrap}
+  .stat{padding:0 28px}
+  .stat + .stat{border-left:1px solid var(--line-soft)}
+  .stat b{display:block;font-family:var(--serif);font-weight:900;font-size:1.9rem;line-height:1}
+  .stat span{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--vellum-dim)}
+
+  section{position:relative;padding:60px 0}
+  .sec-head{margin-bottom:30px}
+  .sec-head h2{font-family:var(--serif);font-weight:900;font-size:clamp(1.7rem,4.4vw,2.6rem);line-height:1.05;letter-spacing:-.01em;margin-top:8px}
+  .sec-head p{color:#cabb9a;max-width:54ch;margin-top:10px;font-size:1rem}
+  .card{background:linear-gradient(180deg,var(--ink-2),var(--ink));border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+
+  .signin-banner{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 20px;margin-bottom:18px;border:1px dashed var(--line);border-radius:14px;background:rgba(75,107,224,.06)}
+  .signin-banner p{font-size:.9rem;color:#d8cbac;margin:0}
+  .signin-banner .btn{margin-left:auto}
+  .signin-banner.hide{display:none}
+
+  .daily{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}
+  @media(max-width:720px){.daily{grid-template-columns:1fr}}
+  .verse-card{padding:30px 32px;position:relative;overflow:hidden}
+  .verse-card .quotemark{position:absolute;top:-22px;right:14px;font-family:var(--serif);font-weight:900;font-size:9rem;color:var(--gold);opacity:.10;line-height:1}
+  .verse-ref{font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .verse-text{font-family:var(--serif);font-style:italic;font-size:clamp(1.3rem,3.4vw,1.85rem);line-height:1.32;margin:16px 0 22px;color:#f6eed8;transition:opacity .25s}
+  .verse-tools{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .tlink{background:none;border:none;color:var(--vellum-dim);font-size:.8rem;font-weight:500;display:inline-flex;align-items:center;gap:7px;padding:6px 0;transition:color .2s}
+  .tlink:hover{color:var(--gold)}
+  .tlink.is-saved{color:var(--gold)}
+  .trans-tag{margin-left:auto;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--vellum-dim);border:1px solid var(--line);border-radius:20px;padding:4px 10px}
+  .streak-card{padding:28px 26px;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .flame{width:72px;height:84px;margin-bottom:6px;transition:transform .3s}
+  .flame.lit .f-core{animation:flick 1.6s ease-in-out infinite}
+  @keyframes flick{0%,100%{transform:scaleY(1) translateY(0)}50%{transform:scaleY(1.06) translateY(-2px)}}
+  .streak-num{font-family:var(--serif);font-weight:900;font-size:3.4rem;line-height:1}
+  .streak-lbl{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--vellum-dim);margin-bottom:18px}
+  .streak-card .btn{width:100%;justify-content:center}
+  .week{display:flex;gap:6px;margin-top:18px}
+  .week span{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:.58rem;color:var(--vellum-dim)}
+  .week span.on{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#3a2a06;border-color:transparent;font-weight:700}
+
+  .path{position:relative;margin-top:8px}
+  .path::before{content:"";position:absolute;left:23px;top:14px;bottom:14px;width:2px;background:linear-gradient(var(--gold),var(--line) 60%);opacity:.5}
+  .stage{position:relative;padding:0 0 14px 66px;cursor:pointer}
+  .node{position:absolute;left:0;top:2px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:900;font-size:1rem;background:var(--ink-2);border:2px solid var(--line);color:var(--vellum-dim);transition:all .3s;z-index:2}
+  .stage.done .node{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#3a2a06;border-color:var(--gold);box-shadow:0 0 0 5px rgba(227,179,65,.14)}
+  .stage.current .node{border-color:var(--gold);color:var(--gold);box-shadow:0 0 0 5px rgba(227,179,65,.10)}
+  .stage-body{background:linear-gradient(180deg,var(--ink-2),rgba(29,25,58,.4));border:1px solid var(--line-soft);border-radius:14px;padding:16px 18px;transition:border-color .25s,transform .2s}
+  .stage:hover .stage-body{border-color:var(--line);transform:translateX(3px)}
+  .stage-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .stage-top h3{font-family:var(--serif);font-weight:600;font-size:1.22rem}
+  .stage-range{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);border:1px solid var(--line);border-radius:20px;padding:3px 9px;margin-left:auto}
+  .stage-tag{font-size:.84rem;color:#c9ba99;margin-top:3px}
+  .stage-detail{max-height:0;overflow:hidden;opacity:0;transition:max-height .4s ease,opacity .3s,margin .3s}
+  .stage.open .stage-detail{max-height:260px;opacity:1;margin-top:12px}
+  .stage-detail p{font-size:.92rem;color:#d3c5a4}
+  .stage-detail .key{font-family:var(--serif);font-style:italic;color:#f1e8cf;border-left:2px solid var(--gold);padding-left:12px;margin-top:10px}
+  .mark-done{margin-top:14px;font-size:.74rem;font-weight:600;letter-spacing:.04em;color:var(--gold);background:rgba(227,179,65,.10);border:1px solid var(--line);border-radius:9px;padding:8px 14px;transition:background .2s}
+  .mark-done:hover{background:rgba(227,179,65,.2)}
+  .stage.done .mark-done{color:var(--green);border-color:rgba(63,178,132,.4);background:rgba(63,178,132,.08)}
+
+  .quiz-shell{padding:30px 30px 26px}
+  @media(max-width:560px){.quiz-shell{padding:24px 20px}}
+  .quiz-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .quiz-step{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--vellum-dim)}
+  .quiz-score{font-family:var(--serif);font-weight:900;font-size:1.1rem;color:var(--gold)}
+  .quiz-q{font-family:var(--serif);font-weight:600;font-size:clamp(1.3rem,3.6vw,1.7rem);line-height:1.25;margin-bottom:22px;min-height:2.4em}
+  .opts{display:grid;gap:11px}
+  .opt{text-align:left;background:rgba(255,255,255,.025);border:1px solid var(--line-soft);border-radius:12px;padding:15px 18px;color:var(--vellum);font-size:.98rem;font-weight:500;display:flex;align-items:center;gap:14px;transition:all .18s}
+  .opt:hover:not(:disabled){border-color:var(--gold);background:rgba(227,179,65,.06);transform:translateY(-1px)}
+  .opt .key2{width:26px;height:26px;flex:none;border-radius:7px;border:1px solid var(--line);display:grid;place-items:center;font-size:.78rem;font-weight:700;font-family:var(--sans);color:var(--gold)}
+  .opt.correct{border-color:var(--green);background:rgba(63,178,132,.12)}
+  .opt.correct .key2{background:var(--green);color:#06281c;border-color:transparent}
+  .opt.wrong{border-color:var(--vermilion);background:rgba(223,79,51,.12)}
+  .opt.wrong .key2{background:var(--vermilion);color:#2a0a04;border-color:transparent}
+  .opt:disabled{cursor:default}
+  .quiz-foot{margin-top:20px;display:flex;align-items:center;gap:14px;min-height:46px}
+  .feedback{font-size:.9rem;font-weight:500}
+  .feedback.good{color:var(--green)}
+  .feedback.bad{color:var(--vermilion)}
+  .quiz-foot .btn{margin-left:auto}
+  .quiz-end{text-align:center;padding:8px 4px}
+  .quiz-end .seal{width:84px;height:84px;margin:0 auto 14px}
+  .quiz-end h3{font-family:var(--serif);font-weight:900;font-size:2rem}
+  .quiz-end .rankline{color:var(--gold);font-weight:600;letter-spacing:.04em;margin:6px 0 4px}
+  .quiz-end p{color:#cabb9a;margin-bottom:20px}
+
+  footer{padding:54px 0 40px;border-top:1px solid var(--line-soft);text-align:center;margin-top:30px}
+  footer .mark{justify-content:center;margin-bottom:14px}
+  footer p{color:var(--vellum-dim);font-size:.84rem;max-width:46ch;margin:0 auto}
+  footer .small{margin-top:18px;font-size:.7rem;color:#6f6790;letter-spacing:.04em}
+
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <div class="mark">
+      <svg class="glyph" viewBox="0 0 24 24" fill="none"><path d="M12 2 14.6 8.4 21.5 8.9 16.2 13.3 17.9 20 12 16.3 6.1 20 7.8 13.3 2.5 8.9 9.4 8.4Z" fill="url(#g1)"/><defs><linearGradient id="g1" x1="2" y1="2" x2="22" y2="22"><stop stop-color="#f7dd86"/><stop offset="1" stop-color="#9d7220"/></linearGradient></defs></svg>
+      <span>ILLUMINE</span>
+    </div>
+    <div class="rank">
+      <div class="rank-meta">
+        <div class="rank-name" id="rankName">Seeker</div>
+        <div class="rank-sub"><span id="xpNow">0</span> XP</div>
+      </div>
+      <div class="xpbar"><i id="xpFill"></i></div>
+    </div>
+    <div class="auth" id="authArea"></div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <svg class="filigree l" viewBox="0 0 100 200" fill="none"><path d="M90 0C60 30 70 60 50 80 30 100 40 140 70 160 40 165 30 195 60 200" stroke="currentColor" stroke-width="1.4"/><circle cx="50" cy="80" r="3" fill="currentColor"/><circle cx="70" cy="160" r="3" fill="currentColor"/></svg>
+    <svg class="filigree r" viewBox="0 0 100 200" fill="none"><path d="M90 0C60 30 70 60 50 80 30 100 40 140 70 160 40 165 30 195 60 200" stroke="currentColor" stroke-width="1.4"/><circle cx="50" cy="80" r="3" fill="currentColor"/><circle cx="70" cy="160" r="3" fill="currentColor"/></svg>
+    <div class="eyebrow hero-eyebrow">66 books · 1 story · zero boredom</div>
+    <div class="initial">&#945;&#937;</div>
+    <h1>Don't just read the Bible. <em>Master</em> the story you're living in.</h1>
+    <p class="lead">A daily verse, a quiz that actually sharpens you, and the whole arc of scripture mapped as a quest — built so it sticks, not so it puts you to sleep.</p>
+    <div class="cta-row">
+      <a href="#daily" class="btn btn-gold">Start today's verse →</a>
+      <a href="#story" class="btn btn-ghost">See the whole story</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>8</b><span>Epochs</span></div>
+      <div class="stat"><b class="gold-text" id="heroStreak">0</b><span>Day streak</span></div>
+      <div class="stat"><b id="heroXp">0</b><span>XP earned</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="daily">
+  <div class="wrap">
+    <div class="signin-banner reveal" id="signinBanner">
+      <p><b>Sign in with Google</b> to save your streak, XP, and progress across every device.</p>
+      <button class="btn btn-gold" id="bannerSignIn">Sign in with Google</button>
+    </div>
+    <div class="sec-head reveal">
+      <div class="eyebrow">The daily anchor</div>
+      <h2>One verse. Every day. Built to stick.</h2>
+      <p>Read it, sit with it, log it. Showing up daily is where it compounds — keep the flame alive.</p>
+    </div>
+    <div class="daily reveal">
+      <div class="verse-card card">
+        <span class="quotemark">"</span>
+        <div class="verse-ref" id="vRef">Proverbs 27:17</div>
+        <div class="verse-text" id="vText">Iron sharpens iron; so a man sharpens his friend's countenance.</div>
+        <div class="verse-tools">
+          <button class="tlink" id="saveBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3v18l7-5 7 5V3z"/></svg>Save verse</button>
+          <button class="tlink" id="nextVerse"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h14M13 6l6 6-6 6"/></svg>Another verse</button>
+          <span class="trans-tag">WEB</span>
+        </div>
+      </div>
+      <div class="streak-card card">
+        <svg class="flame lit" id="flame" viewBox="0 0 60 70">
+          <path class="f-core" d="M30 4C34 18 48 22 44 42c-1 9-7 16-14 16S15 51 16 42C13 30 22 28 22 18c4 6 8 4 8 12 0-10 0-16 0-26Z" fill="url(#fg)"/>
+          <path d="M30 30c4 6 9 9 7 18-1 6-4 10-8 10s-8-5-8-12c2-8 7-9 9-16Z" fill="#ffe9a8"/>
+          <defs><linearGradient id="fg" x1="30" y1="4" x2="30" y2="58"><stop stop-color="#f7dd86"/><stop offset=".5" stop-color="#e3b341"/><stop offset="1" stop-color="#df4f33"/></linearGradient></defs>
+        </svg>
+        <div class="streak-num" id="streakNum">0</div>
+        <div class="streak-lbl">Day streak</div>
+        <button class="btn btn-gold" id="logBtn">Log today (+20 XP)</button>
+        <div class="week" id="week"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="story">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">The whole arc</div>
+      <h2>The Bible isn't 66 random books. It's one story.</h2>
+      <p>Most people get lost because nobody hands them the map. Here it is — eight epochs from the first light to the new creation. Tap any stage, then mark it cleared.</p>
+    </div>
+    <div class="path reveal" id="path"></div>
+  </div>
+</section>
+
+<section id="quiz">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Iron sharpens iron</div>
+      <h2>Think you know it? Prove it.</h2>
+      <p>Eight questions, easy to brutal. Every right answer is XP. No streak of correct answers is safe.</p>
+    </div>
+    <div class="card quiz-shell reveal" id="quizCard">
+      <div class="quiz-meta">
+        <span class="quiz-step" id="quizStep">Question 1 / 8</span>
+        <span class="quiz-score">Score <span id="quizScore">0</span></span>
+      </div>
+      <div class="quiz-q" id="quizQ"></div>
+      <div class="opts" id="quizOpts"></div>
+      <div class="quiz-foot">
+        <span class="feedback" id="quizFb"></span>
+        <button class="btn btn-gold" id="quizNext" style="display:none">Next →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="mark"><svg class="glyph" viewBox="0 0 24 24" fill="none"><path d="M12 2 14.6 8.4 21.5 8.9 16.2 13.3 17.9 20 12 16.3 6.1 20 7.8 13.3 2.5 8.9 9.4 8.4Z" fill="url(#g2)"/><defs><linearGradient id="g2" x1="2" y1="2" x2="22" y2="22"><stop stop-color="#f7dd86"/><stop offset="1" stop-color="#9d7220"/></linearGradient></defs></svg><span>ILLUMINE</span></div>
+    <p>Show up daily, climb the ranks, and one day the whole story is just… in you. That's the win.</p>
+    <p class="small">Scripture quotations are public domain (World English Bible). Sign in to keep your progress.</p>
+  </div>
+</footer>
+
+<script type="module">
+/* ============================================================
+   FIREBASE SETUP  ▸  paste your 4 values below (see the steps)
+   ============================================================ */
+const firebaseConfig = {
+  apiKey:     "PASTE_apiKey",
+  authDomain: "PASTE_authDomain",
+  projectId:  "PASTE_projectId",
+  appId:      "PASTE_appId"
+};
+/* ============================================================ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const $ = s => document.querySelector(s);
+const CONFIGURED = !firebaseConfig.apiKey.startsWith("PASTE");
+
+/* ---------------- STATE ---------------- */
+const RANKS = [
+  {name:"Seeker",at:0},{name:"Disciple",at:120},{name:"Watchman",at:300},
+  {name:"Scribe",at:560},{name:"Herald",at:900},{name:"Apostle",at:1400}
+];
+function defaultState(){
+  return { xp:0, streak:0, lastLog:null,
+    week:[false,false,false,false,false,false,false],
+    saved:[], done:[false,false,false,false,false,false,false,false] };
+}
+let state = defaultState();
+let user = null, auth = null, db = null, saveTimer = null, openStage = -1;
+
+/* ---------------- AUTH ---------------- */
+function renderAuth(){
+  const box = $("#authArea");
+  if(user){
+    const first = (user.displayName||"You").split(" ")[0];
+    const pic = user.photoURL
+      ? `<img src="${user.photoURL}" alt="" referrerpolicy="no-referrer">`
+      : `<div style="width:30px;height:30px;border-radius:50%;background:var(--ink-3);border:1px solid var(--line)"></div>`;
+    box.innerHTML = `<div class="auth-user">${pic}<div class="who"><b>${first}</b><span id="signOut">Sign out</span></div></div>`;
+    $("#signOut").addEventListener("click", ()=> signOut(auth));
+  } else {
+    box.innerHTML = `<button class="auth-btn" id="signIn">${gIcon()}Sign in</button>`;
+    $("#signIn").addEventListener("click", signIn);
+  }
+  $("#signinBanner").classList.toggle("hide", !!user);
+}
+function gIcon(){
+  return `<svg width="15" height="15" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 7.1 29.6 5 24 5 16 5 9.1 9.5 6.3 14.7z"/><path fill="#4CAF50" d="M24 45c5.2 0 9.9-2 13.5-5.2l-6.2-5.3C29.2 35.9 26.7 37 24 37c-5.3 0-9.7-2.6-11.3-7l-6.5 5C9 40.4 15.9 45 24 45z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.5l6.2 5.3C42.9 35.6 45 30.3 45 24c0-1.2-.1-2.3-.4-3.5z"/></svg>`;
+}
+async function signIn(){
+  if(!CONFIGURED){
+    alert("Almost there! Paste your Firebase config into the file (the 4 PASTE_ values near the top of the script) to turn on Google sign-in.");
+    return;
+  }
+  try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch(e){ console.error(e); alert("Sign-in failed: " + e.message); }
+}
+
+/* ---------------- CLOUD SAVE / LOAD ---------------- */
+function save(){
+  if(!user || !db) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    setDoc(doc(db,"users",user.uid), state).catch(e=>console.error("save failed",e));
+  }, 600);
+}
+async function load(){
+  try{
+    const snap = await getDoc(doc(db,"users",user.uid));
+    state = snap.exists() ? Object.assign(defaultState(), snap.data()) : defaultState();
+    if(!snap.exists()) save();
+  }catch(e){ console.error("load failed",e); state = defaultState(); }
+  renderAll();
+}
+
+/* ---------------- RANK / RENDER ---------------- */
+function updateRank(){
+  let cur = RANKS[0], next = null;
+  for(let i=0;i<RANKS.length;i++){ if(state.xp >= RANKS[i].at){ cur = RANKS[i]; next = RANKS[i+1]||null; } }
+  $("#rankName").textContent = cur.name;
+  $("#xpNow").textContent = state.xp;
+  $("#heroXp").textContent = state.xp;
+  const pct = next ? ((state.xp - cur.at)/(next.at - cur.at))*100 : 100;
+  $("#xpFill").style.width = Math.min(100,Math.max(3,pct)) + "%";
+}
+function renderAll(){
+  updateRank();
+  $("#streakNum").textContent = state.streak;
+  $("#heroStreak").textContent = state.streak;
+  renderWeek(); renderLogBtn(); renderSaveBtn(); renderPath();
+}
+
+/* ---------------- DAILY VERSE ---------------- */
+const VERSES = [
+  {r:"Proverbs 27:17", t:"Iron sharpens iron; so a man sharpens his friend's countenance."},
+  {r:"Joshua 1:9", t:"Be strong and courageous. Don't be afraid. Don't be dismayed, for your God is with you wherever you go."},
+  {r:"Philippians 4:13", t:"I can do all things through Christ, who strengthens me."},
+  {r:"1 Corinthians 16:13", t:"Watch! Stand firm in the faith! Be courageous! Be strong!"},
+  {r:"Romans 8:28", t:"We know that all things work together for good for those who love God, for those called according to his purpose."},
+  {r:"2 Timothy 1:7", t:"For God didn't give us a spirit of fear, but of power, love, and self-control."},
+  {r:"Psalm 23:1", t:"The Lord is my shepherd; I shall lack nothing."},
+  {r:"James 1:12", t:"Blessed is a person who endures temptation, for when he has been approved, he will receive the crown of life."}
+];
+let vIdx = 0;
+function renderSaveBtn(){
+  const b = $("#saveBtn");
+  const has = state.saved.includes(VERSES[vIdx].r);
+  b.classList.toggle("is-saved", has);
+  b.lastChild.textContent = has ? "Saved" : "Save verse";
+}
+function showVerse(i){
+  vIdx = (i + VERSES.length) % VERSES.length;
+  const el = $("#vText");
+  el.style.opacity = 0;
+  setTimeout(()=>{
+    $("#vRef").textContent = VERSES[vIdx].r;
+    el.textContent = VERSES[vIdx].t;
+    el.style.opacity = 1;
+    renderSaveBtn();
+  },180);
+}
+$("#nextVerse").addEventListener("click", ()=> showVerse(vIdx+1));
+$("#saveBtn").addEventListener("click", ()=>{
+  const ref = VERSES[vIdx].r;
+  if(!state.saved.includes(ref)){ state.saved.push(ref); state.xp += 5; }
+  else { state.saved = state.saved.filter(x=>x!==ref); }
+  renderSaveBtn(); updateRank(); save();
+});
+
+/* ---------------- STREAK (date-aware) ---------------- */
+const todayStr = () => new Date().toLocaleDateString('en-CA');
+function isYesterday(d){
+  if(!d) return false;
+  const y = new Date(); y.setDate(y.getDate()-1);
+  return d === y.toLocaleDateString('en-CA');
+}
+function renderWeek(){
+  const days = ["S","M","T","W","T","F","S"];
+  $("#week").innerHTML = state.week.map((on,i)=>`<span class="${on?'on':''}">${days[i]}</span>`).join("");
+}
+function renderLogBtn(){
+  const b = $("#logBtn");
+  if(state.lastLog === todayStr()){
+    b.textContent = "Logged ✓ — come back tomorrow";
+    b.style.opacity = .8; b.style.pointerEvents = "none";
+  } else {
+    b.textContent = "Log today (+20 XP)";
+    b.style.opacity = 1; b.style.pointerEvents = "auto";
+  }
+}
+$("#logBtn").addEventListener("click", ()=>{
+  const t = todayStr();
+  if(state.lastLog === t) return;
+  state.streak = isYesterday(state.lastLog) ? state.streak + 1 : 1;
+  state.lastLog = t;
+  state.week[new Date().getDay()] = true;
+  state.xp += 20;
+  renderAll(); save();
+  const f = $("#flame");
+  f.style.transform = "scale(1.25)";
+  setTimeout(()=> f.style.transform = "scale(1)", 300);
+});
+
+/* ---------------- THE STORY / QUEST ---------------- */
+const STAGES = [
+  {n:"I", title:"Creation & Fall", range:"Genesis 1–11", tag:"Where it all begins — and breaks.",
+   detail:"Light, order, humanity, and a garden — then the fall, the flood, and Babel. The setup for everything: a good world gone wrong and a God who won't walk away.",
+   key:"\u201CGod saw everything that he had made, and behold, it was very good.\u201D — Genesis 1:31"},
+  {n:"II", title:"The Patriarchs", range:"Genesis 12–50", tag:"One family, one wild promise.",
+   detail:"God picks Abraham and makes a promise that outlives him: descendants, land, blessing for all nations. Trace it through Isaac, Jacob, and Joseph in Egypt.",
+   key:"\u201CI will bless you... and you will be a blessing.\u201D — Genesis 12:2"},
+  {n:"III", title:"Exodus & Law", range:"Exodus–Deuteronomy", tag:"Slaves walk out free.",
+   detail:"Moses, the plagues, the Red Sea, and Sinai. A rescued people get a covenant, a law, and an identity. This is the rescue the whole Bible keeps pointing back to.",
+   key:"\u201CI am Yahweh your God, who brought you out of the land of Egypt.\u201D — Exodus 20:2"},
+  {n:"IV", title:"Conquest & Kings", range:"Joshua–2 Chronicles", tag:"A nation rises and splits.",
+   detail:"Into the land with Joshua, judges on repeat, then kings — Saul, David, Solomon. Peak glory, then a kingdom torn in two by pride and compromise.",
+   key:"\u201CThe Lord looks at the heart.\u201D — 1 Samuel 16:7"},
+  {n:"V", title:"Prophets & Exile", range:"Isaiah–Malachi", tag:"Warnings, ruin, and hope.",
+   detail:"Prophets call out the rot, nobody listens, Babylon hauls them off. But in the dark, the promise sharpens into one word: a coming King who fixes everything.",
+   key:"\u201CFor to us a child is born... and his name will be called Wonderful Counselor.\u201D — Isaiah 9:6"},
+  {n:"VI", title:"The Christ", range:"Matthew–John", tag:"The promise shows up in person.",
+   detail:"Four angles on one life: Jesus teaches, heals, dies, and rises. Every thread from Genesis on lands here. This is the hinge the entire story turns on.",
+   key:"\u201CThe Word became flesh, and lived among us.\u201D — John 1:14"},
+  {n:"VII", title:"The Church", range:"Acts–Jude", tag:"It goes global.",
+   detail:"The Spirit drops, the movement explodes, Paul writes the playbook on faith. Ordinary people carry the story to the ends of the earth — and to you.",
+   key:"\u201CYou will be my witnesses... to the ends of the earth.\u201D — Acts 1:8"},
+  {n:"VIII", title:"New Creation", range:"Revelation", tag:"How it actually ends.",
+   detail:"Not destruction — restoration. Evil loses, every tear gets wiped, and the garden from Genesis comes back as a city. The story closes by starting something better.",
+   key:"\u201CBehold, I am making all things new.\u201D — Revelation 21:5"}
+];
+function renderPath(){
+  const current = state.done.findIndex(x=>!x);
+  $("#path").innerHTML = STAGES.map((s,i)=>`
+    <div class="stage ${state.done[i]?'done':''} ${i===current?'current':''} ${i===openStage?'open':''}" data-i="${i}">
+      <div class="node">${s.n}</div>
+      <div class="stage-body">
+        <div class="stage-top"><h3>${s.title}</h3><span class="stage-range">${s.range}</span></div>
+        <div class="stage-tag">${s.tag}</div>
+        <div class="stage-detail">
+          <p>${s.detail}</p>
+          <p class="key">${s.key}</p>
+          <button class="mark-done">${state.done[i]?'Cleared ✓':'Mark cleared (+15 XP)'}</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+$("#path").addEventListener("click", e=>{
+  const stage = e.target.closest(".stage");
+  if(!stage) return;
+  const i = +stage.dataset.i;
+  if(e.target.closest(".mark-done")){
+    e.stopPropagation();
+    if(!state.done[i]){ state.done[i] = true; state.xp += 15; openStage = i; renderAll(); save(); }
+    return;
+  }
+  openStage = (openStage === i) ? -1 : i;
+  renderPath();
+});
+
+/* ---------------- QUIZ ---------------- */
+const QUIZ = [
+  {q:"Who built an ark to survive the flood?", o:["Moses","Noah","Abraham","Elijah"], a:1, why:"Noah — Genesis 6. Tip: he wasn't perfect, just obedient."},
+  {q:"How many books are in the Protestant Bible?", o:["66","73","40","27"], a:0, why:"66 — 39 Old Testament, 27 New."},
+  {q:"On which mountain did Moses receive the Ten Commandments?", o:["Mount Zion","Mount Carmel","Mount Sinai","Mount Tabor"], a:2, why:"Mount Sinai — Exodus 19–20."},
+  {q:"Which disciple denied Jesus three times before the rooster crowed?", o:["Judas","John","Thomas","Peter"], a:3, why:"Peter — and Jesus still made him a leader of the church."},
+  {q:"What is the first book of the New Testament?", o:["Mark","Acts","Matthew","John"], a:2, why:"Matthew opens the New Testament with Jesus' genealogy."},
+  {q:"Who was thrown into a den of lions but kept safe overnight?", o:["Daniel","Joseph","Jonah","Samson"], a:0, why:"Daniel 6 — faithful under pressure, untouched by the lions."},
+  {q:"Who betrayed Jesus for thirty pieces of silver?", o:["Pilate","Judas Iscariot","Barabbas","Caiaphas"], a:1, why:"Judas Iscariot — Matthew 26."},
+  {q:"Complete it: 'In the beginning was the ___, and the Word was with God.'", o:["Light","Word","Spirit","Truth"], a:1, why:"'The Word' — John 1:1, pointing straight to Jesus."}
+];
+let qi = 0, qScore = 0, answered = false;
+function renderQuiz(){
+  const item = QUIZ[qi];
+  $("#quizStep").textContent = `Question ${qi+1} / ${QUIZ.length}`;
+  $("#quizScore").textContent = qScore;
+  $("#quizQ").textContent = item.q;
+  const keys = ["A","B","C","D"];
+  $("#quizOpts").innerHTML = item.o.map((o,i)=>`<button class="opt" data-i="${i}"><span class="key2">${keys[i]}</span>${o}</button>`).join("");
+  $("#quizFb").textContent = ""; $("#quizFb").className = "feedback";
+  $("#quizNext").style.display = "none"; answered = false;
+}
+function selectAnswer(i){
+  if(answered) return; answered = true;
+  const item = QUIZ[qi];
+  const btns = document.querySelectorAll(".opt");
+  btns.forEach(b=>b.disabled=true);
+  btns[item.a].classList.add("correct");
+  if(i === item.a){
+    qScore++; state.xp += 10; updateRank(); save();
+    $("#quizScore").textContent = qScore;
+    $("#quizFb").textContent = "Correct. " + item.why; $("#quizFb").className = "feedback good";
+  } else {
+    btns[i].classList.add("wrong");
+    $("#quizFb").textContent = "Not quite. " + item.why; $("#quizFb").className = "feedback bad";
+  }
+  $("#quizNext").style.display = "inline-flex";
+  $("#quizNext").textContent = (qi === QUIZ.length-1) ? "See your rank →" : "Next →";
+}
+$("#quizOpts").addEventListener("click", e=>{ const b = e.target.closest(".opt"); if(b) selectAnswer(+b.dataset.i); });
+$("#quizNext").addEventListener("click", ()=>{ if(qi < QUIZ.length-1){ qi++; renderQuiz(); } else endQuiz(); });
+function endQuiz(){
+  const pct = qScore/QUIZ.length; let title, line;
+  if(pct===1){ title="Flawless"; line="Scholar-tier. You actually know this."; }
+  else if(pct>=.75){ title="Sharp"; line="Strong. A couple more reps and it's locked in."; }
+  else if(pct>=.5){ title="Getting there"; line="Solid base — the story's clicking. Keep going."; }
+  else { title="Day one"; line="Everyone starts here. Run the quest path and come back."; }
+  $("#quizCard").innerHTML = `
+    <div class="quiz-end">
+      <svg class="seal" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="34" stroke="url(#sg)" stroke-width="3"/><path d="M40 16 44 33 61 33 47 44 52 61 40 50 28 61 33 44 19 33 36 33Z" fill="url(#sg)"/><defs><linearGradient id="sg" x1="6" y1="6" x2="74" y2="74"><stop stop-color="#f7dd86"/><stop offset="1" stop-color="#9d7220"/></linearGradient></defs></svg>
+      <h3>${qScore} / ${QUIZ.length}</h3><div class="rankline">${title}</div><p>${line}</p>
+      <button class="btn btn-gold" id="quizRetry">Run it back</button>
+    </div>`;
+  $("#quizRetry").addEventListener("click", ()=>{ qi=0; qScore=0; renderQuiz();
+    $("#quizCard").scrollIntoView({behavior:"smooth",block:"center"}); });
+}
+
+/* ---------------- BANNER + INIT ---------------- */
+$("#bannerSignIn").addEventListener("click", signIn);
+
+if(CONFIGURED){
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app); db = getFirestore(app);
+  onAuthStateChanged(auth, async u=>{
+    user = u; renderAuth();
+    if(u){ await load(); }
+    else { state = defaultState(); renderAll(); }
+  });
+} else {
+  renderAuth();
+}
+
+renderQuiz();
+renderAll();
+
+const io = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+},{threshold:.15});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
